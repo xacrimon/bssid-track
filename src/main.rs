@@ -19,16 +19,14 @@ async fn main() {
     debug!("loaded oui data with {} entries", oiu_list.len());
 
     loop {
-        let (bssid, i_oui) = random_bssid(&mut rand::thread_rng(), &oiu_list);
-        let vendor = &oiu_map[&oiu_list[i_oui]];
-        debug!("checking bssid {} from {},", bssid, vendor);
+        let bssid = random_bssid(&mut rand::thread_rng(), &oiu_list);
+        debug!("checking bssid: {}", bssid);
         fetch(&reqwest::Client::new(), &bssid).await.unwrap();
     }
 }
 
-fn random_bssid(rng: &mut rand::rngs::ThreadRng, ouis: &[String]) -> (String, usize) {
-    let i_oui = rng.gen_range(0..ouis.len());
-    let oui = &ouis[i_oui];
+fn random_bssid(rng: &mut rand::rngs::ThreadRng, ouis: &[String]) -> String {
+    let oui = &ouis[rng.gen_range(0..ouis.len())];
     let mut bssid = String::new();
 
     bssid.push_str(&(&oui[0..2]).to_lowercase());
@@ -42,7 +40,7 @@ fn random_bssid(rng: &mut rand::rngs::ThreadRng, ouis: &[String]) -> (String, us
         bssid.push_str(&format!("{:02x}", rng.gen_range(0..256)));
     }
 
-    (bssid, i_oui)
+    bssid
 }
 
 async fn fetch(client: &reqwest::Client, bssid: &str) -> Result<()> {
